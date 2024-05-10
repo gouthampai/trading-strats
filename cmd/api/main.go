@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"github.com/alpacahq/alpaca-trade-api-go/v3/alpaca"
+	"github.com/alpacahq/alpaca-trade-api-go/v3/marketdata"
 )
 
 type config struct {
@@ -19,9 +20,10 @@ type config struct {
 }
 
 type application struct {
-	config       config
-	logger       *log.Logger
-	alpacaClient *alpaca.Client
+	config        config
+	logger        *log.Logger
+	accountClient *alpaca.Client
+	marketClient  *marketdata.Client
 }
 
 func main() {
@@ -41,10 +43,17 @@ func main() {
 		APISecret: cfg.alpacaSecret,
 		BaseURL:   cfg.alpacaEndpoint,
 	})
+
+	marketClient := marketdata.NewClient(marketdata.ClientOpts{
+		APIKey:    cfg.alpacaKey,
+		APISecret: cfg.alpacaSecret,
+	})
+
 	app := &application{
-		config:       cfg,
-		logger:       logger,
-		alpacaClient: alpacaClient,
+		config:        cfg,
+		logger:        logger,
+		accountClient: alpacaClient,
+		marketClient:  marketClient,
 	}
 
 	//router := app.route()
@@ -56,6 +65,22 @@ func main() {
 		panic(err)
 	}
 
-	output, err := json.MarshalIndent(*acct, "", "\t")
+	prettyPrint(*acct)
+
+	resp, err := marketClient.GetSnapshot("NVDA", marketdata.GetSnapshotRequest{})
+
+	if err != nil {
+		panic(err)
+	}
+
+	prettyPrint(resp)
+}
+
+func prettyPrint(v any) {
+	output, err := json.MarshalIndent(v, "", "\t")
+	if err != nil {
+		panic(err)
+	}
+
 	fmt.Printf(string(output))
 }
