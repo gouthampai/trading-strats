@@ -56,27 +56,14 @@ func main() {
 		marketClient:  marketClient,
 	}
 
-	//router := app.route()
-	addr := fmt.Sprintf(":%d", app.config.port)
-	logger.Printf("starting %s server on %s", cfg.env, addr)
-	//logger.Fatal(http.ListenAndServe(addr, router))
-	acct, err := alpacaClient.GetAccount()
-	if err != nil {
-		panic(err)
+	averages := app.CalculateMovingAverages("NVDA")
+	fmt.Printf("Last %v days of data\n", len(averages))
+	for i := 0; i < len(averages); i++ {
+		fmt.Printf("Date: %v\n50 day average: %v\n200 day average: %v\n\n", averages[i].dayOfYear, averages[i].fiftyDayAverage, averages[i].twoHundredDayAverage)
 	}
-
-	prettyPrint(*acct)
-
-	resp, err := marketClient.GetSnapshot("NVDA", marketdata.GetSnapshotRequest{})
-
-	if err != nil {
-		panic(err)
-	}
-
-	prettyPrint(resp)
 }
 
-func prettyPrint(v any) {
+func (app *application) prettyPrint(v any) {
 	output, err := json.MarshalIndent(v, "", "\t")
 	if err != nil {
 		panic(err)
