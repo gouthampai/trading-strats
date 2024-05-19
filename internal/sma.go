@@ -1,6 +1,8 @@
 package internal
 
 import (
+	"errors"
+	"log"
 	"time"
 
 	"github.com/alpacahq/alpaca-trade-api-go/v3/marketdata"
@@ -13,22 +15,52 @@ type smaResult struct {
 	twoHundredDayAverage decimal.Decimal
 }
 
+type SmaCrossStrategy struct {
+	marketClient *marketdata.Client
+	logger       *log.Logger
+}
+
+func (strat *SmaCrossStrategy) ApplyStrategy(symbol string) StrategyResult {
+	averages, error := strat.CalculateMovingAverages(symbol)
+	if error != nil {
+		strat.logger.Fatal(error)
+		return StrategyResult{
+			Success:  false,
+			Decision: Undecided,
+			Symbol:   symbol,
+		}
+	}
+
+	if len(averages) == 0 {
+		return StrategyResult{
+			Success:  false,
+			Decision: Undecided,
+			Symbol:   symbol,
+		}
+	}
+
+	for i := 0; i < len(averages); i++ {
+		// todo: implement golden cross and death cross detection logic
+	}
+
+}
+
 // assume this is calculating from the current day
 // future state, pass in a date
 // store historical data to reduce api calls?
-func (app *application) CalculateMovingAverages(symbol string) []smaResult {
+func (strat *SmaCrossStrategy) CalculateMovingAverages(symbol string) ([]smaResult, error) {
 	// get the last 214 days of data so that we can compute the moving average data for the last two weeks
-	resp, err := app.marketClient.GetBars(symbol, marketdata.GetBarsRequest{
+	resp, err := strat.marketClient.GetBars(symbol, marketdata.GetBarsRequest{
 		Start:     time.Now().Local().AddDate(0, 0, -365),
 		TimeFrame: marketdata.NewTimeFrame(1, marketdata.Day),
 	})
 
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	if len(resp) < 200 {
-		panic("not enough data to calculate SMAs")
+		return nil, errors.New("Fewer than 200 days of results returned by alpaca")
 	}
 
 	two_hundred_day_agg := decimal.Zero
