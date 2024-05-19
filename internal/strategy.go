@@ -1,17 +1,16 @@
 package internal
 
-import "github.com/alpacahq/alpaca-trade-api-go/v3/marketdata"
-
 type StrategyDecision int
 
 const (
-	Hold StrategyDecision = iota
+	Undecided StrategyDecision = iota
+	Hold
 	Buy
 	Sell
 )
 
 func (s StrategyDecision) String() string {
-	return [...]string{"Hold", "Buy", "Sell"}[s]
+	return [...]string{"Undecided", "Hold", "Buy", "Sell"}[s]
 }
 
 func (s StrategyDecision) EnumIndex() int {
@@ -19,6 +18,7 @@ func (s StrategyDecision) EnumIndex() int {
 }
 
 type StrategyResult struct {
+	Success  bool
 	Decision StrategyDecision
 	Symbol   string
 }
@@ -28,5 +28,4 @@ type StrategyImplementation interface {
 }
 
 type TradingStrategyDecisionEngine struct {
-	marketClient *marketdata.Client
 }
