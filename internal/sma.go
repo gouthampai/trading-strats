@@ -103,5 +103,5 @@ func (strat *SmaCrossStrategy) CalculateMovingAverages(symbol string) ([]smaResu
 		result = append(result, temp)
 	}
 
-	return result
+	return result, nil
 }
