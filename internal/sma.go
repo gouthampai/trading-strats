@@ -31,7 +31,8 @@ func (strat *SmaCrossStrategy) ApplyStrategy(symbol string) StrategyResult {
 		}
 	}
 
-	if len(averages) == 0 {
+	// we need at least 2 records to check if there is a golden or death cross
+	if len(averages) < 2 {
 		return StrategyResult{
 			Success:  false,
 			Decision: Undecided,
@@ -39,10 +40,41 @@ func (strat *SmaCrossStrategy) ApplyStrategy(symbol string) StrategyResult {
 		}
 	}
 
-	for i := 0; i < len(averages); i++ {
+	goldenCrossDetected := false
+	deathCrossDetected := false
+
+	for i := 1; i < len(averages); i++ {
 		// todo: implement golden cross and death cross detection logic
+		prevRecord := averages[i-1]
+		curRecord := averages[i]
+
+		// golden cross detected
+		if prevRecord.fiftyDayAverage.Compare(curRecord.twoHundredDayAverage) == -1 && curRecord.fiftyDayAverage.Compare(curRecord.twoHundredDayAverage) > -1 {
+			goldenCrossDetected = true
+			deathCrossDetected = false
+		}
+
+		if prevRecord.fiftyDayAverage.Compare(curRecord.twoHundredDayAverage) == 1 && curRecord.fiftyDayAverage.Compare(curRecord.twoHundredDayAverage) < 1 {
+			goldenCrossDetected = false
+			deathCrossDetected = true
+		}
 	}
 
+	result := StrategyResult{
+		Success:  true,
+		Decision: Undecided,
+		Symbol:   symbol,
+	}
+
+	if goldenCrossDetected {
+		result.Decision = Buy
+	} else if deathCrossDetected {
+		result.Decision = Sell
+	} else {
+		result.Decision = Hold
+	}
+
+	return result
 }
 
 // assume this is calculating from the current day
