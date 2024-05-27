@@ -9,6 +9,7 @@ import (
 
 	"github.com/alpacahq/alpaca-trade-api-go/v3/alpaca"
 	"github.com/alpacahq/alpaca-trade-api-go/v3/marketdata"
+	"github.com/gouthampai/trading-strats/internal/strategy"
 )
 
 type config struct {
@@ -56,11 +57,23 @@ func main() {
 		marketClient:  marketClient,
 	}
 
-	averages := app.CalculateMovingAverages("NVDA")
-	fmt.Printf("Last %v days of data\n", len(averages))
-	for i := 0; i < len(averages); i++ {
-		fmt.Printf("Date: %v\n50 day average: %v\n200 day average: %v\n\n", averages[i].dayOfYear, averages[i].fiftyDayAverage, averages[i].twoHundredDayAverage)
+	// todo: move this type creation into internal
+	smaStrat := &strategy.SmaCrossStrategy{
+		MarketClient: marketClient,
+		Logger:       logger,
 	}
+
+	strats := []strategy.StrategyImplementation{
+		smaStrat,
+	}
+
+	engine := &strategy.TradingStrategyDecisionEngine{
+		Strategies: strats,
+	}
+
+	result := engine.GetAggregateDecisions("AMZN")
+
+	app.prettyPrint(result)
 }
 
 func (app *application) prettyPrint(v any) {
