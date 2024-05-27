@@ -1,4 +1,4 @@
-package internal
+package strategy
 
 import (
 	"errors"
@@ -16,65 +16,75 @@ type smaResult struct {
 }
 
 type SmaCrossStrategy struct {
-	marketClient *marketdata.Client
-	logger       *log.Logger
+	MarketClient *marketdata.Client
+	Logger       *log.Logger
 }
 
-func (strat *SmaCrossStrategy) ApplyStrategy(symbol string) StrategyResult {
-	averages, error := strat.CalculateMovingAverages(symbol)
-	if error != nil {
-		strat.logger.Fatal(error)
-		return StrategyResult{
-			Success:  false,
+func (strat *SmaCrossStrategy) ApplyStrategy(symbol string) <-chan StrategyResult {
+	response := make(chan StrategyResult)
+	go func() {
+		averages, error := strat.CalculateMovingAverages(symbol)
+		if error != nil {
+			strat.Logger.Fatal(error)
+			response <- StrategyResult{
+				Success:  false,
+				Decision: Undecided,
+				Symbol:   symbol,
+			}
+			close(response)
+			return
+		}
+
+		// we need at least 2 records to check if there is a golden or death cross
+		if len(averages) < 2 {
+			response <- StrategyResult{
+				Success:  false,
+				Decision: Undecided,
+				Symbol:   symbol,
+			}
+			close(response)
+			return
+		}
+
+		goldenCrossDetected := false
+		deathCrossDetected := false
+
+		for i := 1; i < len(averages); i++ {
+			// todo: implement golden cross and death cross detection logic
+			prevRecord := averages[i-1]
+			curRecord := averages[i]
+
+			// golden cross detected
+			if prevRecord.fiftyDayAverage.Compare(curRecord.twoHundredDayAverage) == -1 && curRecord.fiftyDayAverage.Compare(curRecord.twoHundredDayAverage) > -1 {
+				goldenCrossDetected = true
+				deathCrossDetected = false
+			}
+
+			if prevRecord.fiftyDayAverage.Compare(curRecord.twoHundredDayAverage) == 1 && curRecord.fiftyDayAverage.Compare(curRecord.twoHundredDayAverage) < 1 {
+				goldenCrossDetected = false
+				deathCrossDetected = true
+			}
+		}
+
+		result := StrategyResult{
+			Success:  true,
 			Decision: Undecided,
 			Symbol:   symbol,
 		}
-	}
 
-	// we need at least 2 records to check if there is a golden or death cross
-	if len(averages) < 2 {
-		return StrategyResult{
-			Success:  false,
-			Decision: Undecided,
-			Symbol:   symbol,
-		}
-	}
-
-	goldenCrossDetected := false
-	deathCrossDetected := false
-
-	for i := 1; i < len(averages); i++ {
-		// todo: implement golden cross and death cross detection logic
-		prevRecord := averages[i-1]
-		curRecord := averages[i]
-
-		// golden cross detected
-		if prevRecord.fiftyDayAverage.Compare(curRecord.twoHundredDayAverage) == -1 && curRecord.fiftyDayAverage.Compare(curRecord.twoHundredDayAverage) > -1 {
-			goldenCrossDetected = true
-			deathCrossDetected = false
+		if goldenCrossDetected {
+			result.Decision = Buy
+		} else if deathCrossDetected {
+			result.Decision = Sell
+		} else {
+			result.Decision = Hold
 		}
 
-		if prevRecord.fiftyDayAverage.Compare(curRecord.twoHundredDayAverage) == 1 && curRecord.fiftyDayAverage.Compare(curRecord.twoHundredDayAverage) < 1 {
-			goldenCrossDetected = false
-			deathCrossDetected = true
-		}
-	}
+		response <- result
+		close(response)
+	}()
 
-	result := StrategyResult{
-		Success:  true,
-		Decision: Undecided,
-		Symbol:   symbol,
-	}
-
-	if goldenCrossDetected {
-		result.Decision = Buy
-	} else if deathCrossDetected {
-		result.Decision = Sell
-	} else {
-		result.Decision = Hold
-	}
-
-	return result
+	return response
 }
 
 // assume this is calculating from the current day
@@ -82,7 +92,7 @@ func (strat *SmaCrossStrategy) ApplyStrategy(symbol string) StrategyResult {
 // store historical data to reduce api calls?
 func (strat *SmaCrossStrategy) CalculateMovingAverages(symbol string) ([]smaResult, error) {
 	// get the last 214 days of data so that we can compute the moving average data for the last two weeks
-	resp, err := strat.marketClient.GetBars(symbol, marketdata.GetBarsRequest{
+	resp, err := strat.MarketClient.GetBars(symbol, marketdata.GetBarsRequest{
 		Start:     time.Now().Local().AddDate(0, 0, -365),
 		TimeFrame: marketdata.NewTimeFrame(1, marketdata.Day),
 	})
