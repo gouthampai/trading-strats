@@ -72,9 +72,7 @@ func processChannels(channels ...<-chan StrategyResult) <-chan StrategyResult {
 	multiplex := func(c <-chan StrategyResult) {
 		defer wg.Done()
 		for i := range c {
-			select {
-			case fanin <- i:
-			}
+			fanin <- i
 		}
 	}
 	for _, c := range channels {
