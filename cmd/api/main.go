@@ -37,30 +37,51 @@ func main() {
 	flag.StringVar(&cfg.alpacaSecret, "alpaca-secret", os.Getenv("ALPACA_SECRET"), "Alpaca Secret")
 	flag.Parse()
 
+	app := GenerateApplication(cfg)
+	engine := app.RegisterStrategyServices()
+
+	result := engine.GetAggregateDecisions("META")
+
+	app.prettyPrint(result)
+}
+
+func GenerateApplication(config config) *application {
 	logger := log.New(os.Stdout, "", log.Ldate|log.Ltime)
 
 	alpacaClient := alpaca.NewClient(alpaca.ClientOpts{
-		APIKey:    cfg.alpacaKey,
-		APISecret: cfg.alpacaSecret,
-		BaseURL:   cfg.alpacaEndpoint,
+		APIKey:    config.alpacaKey,
+		APISecret: config.alpacaSecret,
+		BaseURL:   config.alpacaEndpoint,
 	})
 
 	marketClient := marketdata.NewClient(marketdata.ClientOpts{
-		APIKey:    cfg.alpacaKey,
-		APISecret: cfg.alpacaSecret,
+		APIKey:    config.alpacaKey,
+		APISecret: config.alpacaSecret,
 	})
 
 	app := &application{
-		config:        cfg,
+		config:        config,
 		logger:        logger,
 		accountClient: alpacaClient,
 		marketClient:  marketClient,
 	}
 
-	// todo: move this type creation into internal
+	return app
+}
+
+func (app *application) prettyPrint(v any) {
+	output, err := json.MarshalIndent(v, "", "\t")
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Printf(string(output))
+}
+
+func (app *application) RegisterStrategyServices() *strategy.TradingStrategyDecisionEngine {
 	smaStrat := &strategy.SmaCrossStrategy{
-		MarketClient: marketClient,
-		Logger:       logger,
+		MarketClient: app.marketClient,
+		Logger:       app.logger,
 	}
 
 	strats := []strategy.StrategyImplementation{
@@ -71,16 +92,5 @@ func main() {
 		Strategies: strats,
 	}
 
-	result := engine.GetAggregateDecisions("AMZN")
-
-	app.prettyPrint(result)
-}
-
-func (app *application) prettyPrint(v any) {
-	output, err := json.MarshalIndent(v, "", "\t")
-	if err != nil {
-		panic(err)
-	}
-
-	fmt.Printf(string(output))
+	return engine
 }
