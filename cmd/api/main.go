@@ -9,6 +9,7 @@ import (
 
 	"github.com/alpacahq/alpaca-trade-api-go/v3/alpaca"
 	"github.com/alpacahq/alpaca-trade-api-go/v3/marketdata"
+	"github.com/gouthampai/trading-strats/internal/strategy"
 )
 
 type config struct {
@@ -36,31 +37,36 @@ func main() {
 	flag.StringVar(&cfg.alpacaSecret, "alpaca-secret", os.Getenv("ALPACA_SECRET"), "Alpaca Secret")
 	flag.Parse()
 
+	app := GenerateApplication(cfg)
+	engine := app.RegisterStrategyServices()
+
+	result := engine.GetAggregateDecisions("META")
+
+	app.prettyPrint(result)
+}
+
+func GenerateApplication(config config) *application {
 	logger := log.New(os.Stdout, "", log.Ldate|log.Ltime)
 
 	alpacaClient := alpaca.NewClient(alpaca.ClientOpts{
-		APIKey:    cfg.alpacaKey,
-		APISecret: cfg.alpacaSecret,
-		BaseURL:   cfg.alpacaEndpoint,
+		APIKey:    config.alpacaKey,
+		APISecret: config.alpacaSecret,
+		BaseURL:   config.alpacaEndpoint,
 	})
 
 	marketClient := marketdata.NewClient(marketdata.ClientOpts{
-		APIKey:    cfg.alpacaKey,
-		APISecret: cfg.alpacaSecret,
+		APIKey:    config.alpacaKey,
+		APISecret: config.alpacaSecret,
 	})
 
 	app := &application{
-		config:        cfg,
+		config:        config,
 		logger:        logger,
 		accountClient: alpacaClient,
 		marketClient:  marketClient,
 	}
 
-	averages := app.CalculateMovingAverages("NVDA")
-	fmt.Printf("Last %v days of data\n", len(averages))
-	for i := 0; i < len(averages); i++ {
-		fmt.Printf("Date: %v\n50 day average: %v\n200 day average: %v\n\n", averages[i].dayOfYear, averages[i].fiftyDayAverage, averages[i].twoHundredDayAverage)
-	}
+	return app
 }
 
 func (app *application) prettyPrint(v any) {
@@ -70,4 +76,21 @@ func (app *application) prettyPrint(v any) {
 	}
 
 	fmt.Printf(string(output))
+}
+
+func (app *application) RegisterStrategyServices() *strategy.TradingStrategyDecisionEngine {
+	smaStrat := &strategy.SmaCrossStrategy{
+		MarketClient: app.marketClient,
+		Logger:       app.logger,
+	}
+
+	strats := []strategy.StrategyImplementation{
+		smaStrat,
+	}
+
+	engine := &strategy.TradingStrategyDecisionEngine{
+		Strategies: strats,
+	}
+
+	return engine
 }
