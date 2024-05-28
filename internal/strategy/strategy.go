@@ -43,6 +43,10 @@ type TradingStrategyDecisionEngine struct {
 }
 
 func (engine *TradingStrategyDecisionEngine) GetAggregateDecisions(symbol string) AggregateResult {
+	if engine.Strategies == nil || len(engine.Strategies) == 0 {
+		panic("no strategies to apply in TradingStrategyEngine")
+	}
+
 	resultChannels := make([]<-chan StrategyResult, len(engine.Strategies))
 	for i, strat := range engine.Strategies {
 		resultChannels[i] = strat.ApplyStrategy(symbol)
