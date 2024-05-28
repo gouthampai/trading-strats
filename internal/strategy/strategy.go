@@ -1,7 +1,6 @@
 package strategy
 
 import (
-	"fmt"
 	"sync"
 )
 
@@ -60,7 +59,6 @@ func (engine *TradingStrategyDecisionEngine) GetAggregateDecisions(symbol string
 
 	for resp := range processChannels(resultChannels...) {
 		// todo: calculate the actual confidence and strategy across different strats
-		fmt.Println(resp.Decision.String())
 		result.Decision = resp.Decision
 		result.Confidence = 100
 	}
