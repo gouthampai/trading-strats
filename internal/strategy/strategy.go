@@ -1,7 +1,6 @@
 package strategy
 
 import (
-	"fmt"
 	"sync"
 )
 
@@ -43,6 +42,10 @@ type TradingStrategyDecisionEngine struct {
 }
 
 func (engine *TradingStrategyDecisionEngine) GetAggregateDecisions(symbol string) AggregateResult {
+	if engine.Strategies == nil || len(engine.Strategies) == 0 {
+		panic("no strategies to apply in TradingStrategyEngine")
+	}
+
 	resultChannels := make([]<-chan StrategyResult, len(engine.Strategies))
 	for i, strat := range engine.Strategies {
 		resultChannels[i] = strat.ApplyStrategy(symbol)
@@ -56,7 +59,6 @@ func (engine *TradingStrategyDecisionEngine) GetAggregateDecisions(symbol string
 
 	for resp := range processChannels(resultChannels...) {
 		// todo: calculate the actual confidence and strategy across different strats
-		fmt.Println(resp.Decision.String())
 		result.Decision = resp.Decision
 		result.Confidence = 100
 	}

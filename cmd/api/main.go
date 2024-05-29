@@ -40,7 +40,7 @@ func main() {
 	app := GenerateApplication(cfg)
 	engine := app.RegisterStrategyServices()
 
-	result := engine.GetAggregateDecisions("META")
+	result := engine.GetAggregateDecisions("AAPL")
 
 	app.prettyPrint(result)
 }
@@ -80,8 +80,8 @@ func (app *application) prettyPrint(v any) {
 
 func (app *application) RegisterStrategyServices() *strategy.TradingStrategyDecisionEngine {
 	smaStrat := &strategy.SmaCrossStrategy{
-		MarketClient: app.marketClient,
-		Logger:       app.logger,
+		Client: app.marketClient,
+		Logger: app.logger,
 	}
 
 	strats := []strategy.StrategyImplementation{
