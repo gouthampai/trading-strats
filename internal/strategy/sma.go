@@ -1,7 +1,9 @@
 package strategy
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"time"
 
@@ -14,9 +16,9 @@ type GetBarsClient interface {
 }
 
 type smaResult struct {
-	dayOfYear            time.Time
-	fiftyDayAverage      decimal.Decimal
-	twoHundredDayAverage decimal.Decimal
+	DayOfYear            time.Time       `json:"dayOfYear"`
+	FiftyDayAverage      decimal.Decimal `json:"FiftyDayAverage"`
+	TwoHundredDayAverage decimal.Decimal `json:"TwoHundredDayAverage`
 }
 
 type SmaCrossStrategy struct {
@@ -41,6 +43,9 @@ func (strat *SmaCrossStrategy) ApplyStrategy(symbol string) <-chan StrategyResul
 
 		// we need at least 2 records to check if there is a golden or death cross
 		if len(averages) < 2 {
+			prettyPrint(averages)
+			strat.Logger.Println("fewer than 2 records")
+
 			response <- StrategyResult{
 				Success:  false,
 				Decision: Undecided,
@@ -59,12 +64,12 @@ func (strat *SmaCrossStrategy) ApplyStrategy(symbol string) <-chan StrategyResul
 			curRecord := averages[i]
 
 			// golden cross detected
-			if prevRecord.fiftyDayAverage.Compare(curRecord.twoHundredDayAverage) == -1 && curRecord.fiftyDayAverage.Compare(curRecord.twoHundredDayAverage) > -1 {
+			if prevRecord.FiftyDayAverage.Compare(curRecord.TwoHundredDayAverage) == -1 && curRecord.FiftyDayAverage.Compare(curRecord.TwoHundredDayAverage) > -1 {
 				goldenCrossDetected = true
 				deathCrossDetected = false
 			}
 
-			if prevRecord.fiftyDayAverage.Compare(curRecord.twoHundredDayAverage) == 1 && curRecord.fiftyDayAverage.Compare(curRecord.twoHundredDayAverage) < 1 {
+			if prevRecord.FiftyDayAverage.Compare(curRecord.TwoHundredDayAverage) == 1 && curRecord.FiftyDayAverage.Compare(curRecord.TwoHundredDayAverage) < 1 {
 				goldenCrossDetected = false
 				deathCrossDetected = true
 			}
@@ -105,8 +110,8 @@ func (strat *SmaCrossStrategy) CalculateMovingAverages(symbol string) ([]smaResu
 		return nil, err
 	}
 
-	if len(resp) < 200 {
-		return nil, errors.New("fewer than 200 days of results returned by alpaca")
+	if len(resp) < 201 {
+		return nil, errors.New("fewer than 201 days of results returned by alpaca")
 	}
 
 	two_hundred_day_agg := decimal.Zero
@@ -126,13 +131,13 @@ func (strat *SmaCrossStrategy) CalculateMovingAverages(symbol string) ([]smaResu
 
 	result := []smaResult{
 		{
-			dayOfYear:            resp[200].Timestamp,
-			fiftyDayAverage:      fifty_day_agg.Div(decimal_fifty),
-			twoHundredDayAverage: two_hundred_day_agg.Div(decimal_two_hundred),
+			DayOfYear:            resp[199].Timestamp,
+			FiftyDayAverage:      fifty_day_agg.Div(decimal_fifty),
+			TwoHundredDayAverage: two_hundred_day_agg.Div(decimal_two_hundred),
 		},
 	}
 
-	for i := 1; i < len(resp)-200; i++ {
+	for i := 1; i < len(resp)-199; i++ {
 		barToRemove := resp[i-1]
 		barToAdd := resp[199+i]
 		two_hundred_day_agg = two_hundred_day_agg.Sub(decimal.NewFromFloat(barToRemove.VWAP)).Add(decimal.NewFromFloat(barToAdd.VWAP))
@@ -141,12 +146,22 @@ func (strat *SmaCrossStrategy) CalculateMovingAverages(symbol string) ([]smaResu
 		fifty_day_agg = fifty_day_agg.Sub(decimal.NewFromFloat(barToRemove.VWAP)).Add(decimal.NewFromFloat(barToAdd.VWAP))
 
 		temp := smaResult{
-			dayOfYear:            resp[200+i].Timestamp,
-			fiftyDayAverage:      fifty_day_agg.Div(decimal_fifty),
-			twoHundredDayAverage: two_hundred_day_agg.Div(decimal_two_hundred),
+			DayOfYear:            resp[199+i].Timestamp,
+			FiftyDayAverage:      fifty_day_agg.Div(decimal_fifty),
+			TwoHundredDayAverage: two_hundred_day_agg.Div(decimal_two_hundred),
 		}
 
 		result = append(result, temp)
 	}
+	prettyPrint(result)
 	return result, nil
+}
+
+func prettyPrint(v any) {
+	output, err := json.MarshalIndent(v, "", "\t")
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Printf(string(output))
 }
