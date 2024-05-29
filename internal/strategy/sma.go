@@ -9,6 +9,10 @@ import (
 	"github.com/shopspring/decimal"
 )
 
+type GetBarsClient interface {
+	GetBars(symbol string, req marketdata.GetBarsRequest) ([]marketdata.Bar, error)
+}
+
 type smaResult struct {
 	dayOfYear            time.Time
 	fiftyDayAverage      decimal.Decimal
@@ -16,8 +20,8 @@ type smaResult struct {
 }
 
 type SmaCrossStrategy struct {
-	MarketClient *marketdata.Client
-	Logger       *log.Logger
+	Client GetBarsClient
+	Logger *log.Logger
 }
 
 func (strat *SmaCrossStrategy) ApplyStrategy(symbol string) <-chan StrategyResult {
@@ -25,7 +29,7 @@ func (strat *SmaCrossStrategy) ApplyStrategy(symbol string) <-chan StrategyResul
 	go func() {
 		averages, error := strat.CalculateMovingAverages(symbol)
 		if error != nil {
-			strat.Logger.Fatal(error)
+			strat.Logger.Println(error)
 			response <- StrategyResult{
 				Success:  false,
 				Decision: Undecided,
@@ -92,7 +96,7 @@ func (strat *SmaCrossStrategy) ApplyStrategy(symbol string) <-chan StrategyResul
 // store historical data to reduce api calls?
 func (strat *SmaCrossStrategy) CalculateMovingAverages(symbol string) ([]smaResult, error) {
 	// get the last 214 days of data so that we can compute the moving average data for the last two weeks
-	resp, err := strat.MarketClient.GetBars(symbol, marketdata.GetBarsRequest{
+	resp, err := strat.Client.GetBars(symbol, marketdata.GetBarsRequest{
 		Start:     time.Now().Local().AddDate(0, 0, -365),
 		TimeFrame: marketdata.NewTimeFrame(1, marketdata.Day),
 	})
@@ -102,7 +106,7 @@ func (strat *SmaCrossStrategy) CalculateMovingAverages(symbol string) ([]smaResu
 	}
 
 	if len(resp) < 200 {
-		return nil, errors.New("Fewer than 200 days of results returned by alpaca")
+		return nil, errors.New("fewer than 200 days of results returned by alpaca")
 	}
 
 	two_hundred_day_agg := decimal.Zero
@@ -144,6 +148,5 @@ func (strat *SmaCrossStrategy) CalculateMovingAverages(symbol string) ([]smaResu
 
 		result = append(result, temp)
 	}
-
 	return result, nil
 }
