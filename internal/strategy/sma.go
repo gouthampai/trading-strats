@@ -1,9 +1,7 @@
 package strategy
 
 import (
-	"encoding/json"
 	"errors"
-	"fmt"
 	"log"
 	"time"
 
@@ -43,7 +41,6 @@ func (strat *SmaCrossStrategy) ApplyStrategy(symbol string) <-chan StrategyResul
 
 		// we need at least 2 records to check if there is a golden or death cross
 		if len(averages) < 2 {
-			prettyPrint(averages)
 			strat.Logger.Println("fewer than 2 records")
 
 			response <- StrategyResult{
@@ -153,15 +150,5 @@ func (strat *SmaCrossStrategy) CalculateMovingAverages(symbol string) ([]smaResu
 
 		result = append(result, temp)
 	}
-	prettyPrint(result)
 	return result, nil
-}
-
-func prettyPrint(v any) {
-	output, err := json.MarshalIndent(v, "", "\t")
-	if err != nil {
-		panic(err)
-	}
-
-	fmt.Printf(string(output))
 }
