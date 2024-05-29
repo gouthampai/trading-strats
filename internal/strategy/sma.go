@@ -54,7 +54,7 @@ func (strat *SmaCrossStrategy) ApplyStrategy(symbol string) <-chan StrategyResul
 		deathCrossDetected := false
 
 		for i := 1; i < len(averages); i++ {
-			// todo: implement golden cross and death cross detection logic
+			// todo: test golden cross and death cross detection logic
 			prevRecord := averages[i-1]
 			curRecord := averages[i]
 

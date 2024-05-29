@@ -1,6 +1,7 @@
 package strategy
 
 import (
+	"errors"
 	"log"
 	"os"
 	"testing"
@@ -14,6 +15,27 @@ func TestSmaCrossStrategyReturnsErrorWhenInsufficientData(t *testing.T) {
 	client := FakeClient{
 		FakeBarsResult: bars,
 		FakeError:      nil,
+	}
+
+	logger := log.New(os.Stdout, "", log.Ldate|log.Ltime)
+
+	strat := SmaCrossStrategy{
+		Client: &client,
+		Logger: logger,
+	}
+
+	resp := strat.ApplyStrategy("AAPL")
+
+	result := <-resp
+	assert.Equal(t, false, result.Success)
+	assert.Equal(t, "AAPL", result.Symbol)
+	assert.Equal(t, Undecided, result.Decision)
+}
+
+func TestSmaCrossStrategyReturnsErrorWhenClientError(t *testing.T) {
+	client := FakeClient{
+		FakeBarsResult: nil,
+		FakeError:      errors.New("some error from alpaca"),
 	}
 
 	logger := log.New(os.Stdout, "", log.Ldate|log.Ltime)
