@@ -38,15 +38,19 @@ func main() {
 	flag.StringVar(&cfg.alpacaEndpoint, "alpaca-endpoint", os.Getenv("ALPACA_ENDPOINT"), "Alpaca Endpoint")
 	flag.StringVar(&cfg.alpacaKey, "alpaca-key", os.Getenv("ALPACA_KEY"), "Alpaca Key")
 	flag.StringVar(&cfg.alpacaSecret, "alpaca-secret", os.Getenv("ALPACA_SECRET"), "Alpaca Secret")
-	flag.StringVar(&cfg.tickersJsonFilePath, "tickers-json-file-path", "./tickers.json", "Tickers json file path")
+	flag.StringVar(&cfg.tickersJsonFilePath, "tickers-json-file-path", "/Users/gouthampai/Documents/code/trading-strats/cmd/api/tickers.json", "Tickers json file path")
 	flag.Parse()
 
 	app := GenerateApplication(cfg)
+	tickers := app.tickerProvider.GetTickers()
 	engine := app.RegisterStrategyServices()
 
-	result := engine.GetAggregateDecisions("AAPL")
+	for _, symbol := range tickers {
+		result := engine.GetAggregateDecisions(symbol)
 
-	app.prettyPrint(result)
+		app.prettyPrint(result)
+	}
+
 }
 
 func GenerateApplication(config config) *application {
