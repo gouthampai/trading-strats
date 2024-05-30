@@ -18,7 +18,7 @@ type TickerFileReader struct {
 func (tickerFileReader TickerFileReader) GetTickers() []string {
 	jsonfile, err := os.Open(tickerFileReader.FilePath)
 	if err != nil {
-		tickerFileReader.Logger.Fatal(err)
+		tickerFileReader.Logger.Panic(err)
 	}
 
 	defer jsonfile.Close()
@@ -26,7 +26,10 @@ func (tickerFileReader TickerFileReader) GetTickers() []string {
 	byteValue, _ := io.ReadAll(jsonfile)
 
 	var result []string
-	json.Unmarshal([]byte(byteValue), &result)
+	err = json.Unmarshal([]byte(byteValue), &result)
+	if err != nil {
+		tickerFileReader.Logger.Panic(err)
+	}
 
 	return result
 }
