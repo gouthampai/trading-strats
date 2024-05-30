@@ -20,7 +20,7 @@ type smaResult struct {
 }
 
 type SmaCrossStrategy struct {
-	Client GetBarsClient
+	Client GetBarsClient // todo: fix this to use a wrapper. This is actually a no-no in Go the way it is created in main.go
 	Logger *log.Logger
 }
 

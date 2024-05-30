@@ -9,22 +9,25 @@ import (
 
 	"github.com/alpacahq/alpaca-trade-api-go/v3/alpaca"
 	"github.com/alpacahq/alpaca-trade-api-go/v3/marketdata"
+	"github.com/gouthampai/trading-strats/internal/fileinput"
 	"github.com/gouthampai/trading-strats/internal/strategy"
 )
 
 type config struct {
-	port           int
-	env            string
-	alpacaEndpoint string
-	alpacaKey      string
-	alpacaSecret   string
+	port                int
+	env                 string
+	alpacaEndpoint      string
+	alpacaKey           string
+	alpacaSecret        string
+	tickersJsonFilePath string
 }
 
 type application struct {
-	config        config
-	logger        *log.Logger
-	accountClient *alpaca.Client
-	marketClient  *marketdata.Client
+	config         config
+	logger         *log.Logger
+	accountClient  *alpaca.Client
+	marketClient   *marketdata.Client
+	tickerProvider fileinput.TickerProvider
 }
 
 func main() {
@@ -35,14 +38,19 @@ func main() {
 	flag.StringVar(&cfg.alpacaEndpoint, "alpaca-endpoint", os.Getenv("ALPACA_ENDPOINT"), "Alpaca Endpoint")
 	flag.StringVar(&cfg.alpacaKey, "alpaca-key", os.Getenv("ALPACA_KEY"), "Alpaca Key")
 	flag.StringVar(&cfg.alpacaSecret, "alpaca-secret", os.Getenv("ALPACA_SECRET"), "Alpaca Secret")
+	flag.StringVar(&cfg.tickersJsonFilePath, "tickers-json-file-path", "/Users/gouthampai/Documents/code/trading-strats/cmd/api/tickers.json", "Tickers json file path")
 	flag.Parse()
 
 	app := GenerateApplication(cfg)
+	tickers := app.tickerProvider.GetTickers()
 	engine := app.RegisterStrategyServices()
 
-	result := engine.GetAggregateDecisions("AAPL")
+	for _, symbol := range tickers {
+		result := engine.GetAggregateDecisions(symbol)
 
-	app.prettyPrint(result)
+		app.prettyPrint(result)
+	}
+
 }
 
 func GenerateApplication(config config) *application {
@@ -59,11 +67,17 @@ func GenerateApplication(config config) *application {
 		APISecret: config.alpacaSecret,
 	})
 
+	tickerProvider := fileinput.TickerFileReader{
+		FilePath: config.tickersJsonFilePath,
+		Logger:   logger,
+	}
+
 	app := &application{
-		config:        config,
-		logger:        logger,
-		accountClient: alpacaClient,
-		marketClient:  marketClient,
+		config:         config,
+		logger:         logger,
+		accountClient:  alpacaClient,
+		marketClient:   marketClient,
+		tickerProvider: tickerProvider,
 	}
 
 	return app
