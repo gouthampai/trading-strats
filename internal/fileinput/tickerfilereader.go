@@ -2,7 +2,7 @@ package fileinput
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"log"
 	"os"
 )
@@ -23,7 +23,7 @@ func (tickerFileReader TickerFileReader) GetTickers() []string {
 
 	defer jsonfile.Close()
 
-	byteValue, _ := ioutil.ReadAll(jsonfile)
+	byteValue, _ := io.ReadAll(jsonfile)
 
 	var result []string
 	json.Unmarshal([]byte(byteValue), &result)
