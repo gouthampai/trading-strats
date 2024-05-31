@@ -2,6 +2,7 @@ package strategy
 
 import (
 	"sync"
+	"time"
 )
 
 type StrategyDecision int
@@ -25,12 +26,14 @@ type StrategyResult struct {
 	Success  bool
 	Decision StrategyDecision
 	Symbol   string
+	Date     time.Time
 }
 
 type AggregateResult struct {
-	Decision   StrategyDecision
+	Decision   string
 	Symbol     string
 	Confidence float64
+	Date       time.Time
 }
 
 type StrategyImplementation interface {
@@ -52,14 +55,15 @@ func (engine *TradingStrategyDecisionEngine) GetAggregateDecisions(symbol string
 	}
 
 	result := AggregateResult{
-		Decision:   Undecided,
+		Decision:   Undecided.String(),
 		Symbol:     symbol,
 		Confidence: 0.0,
 	}
 
 	for resp := range processChannels(resultChannels...) {
 		// todo: calculate the actual confidence and strategy across different strats
-		result.Decision = resp.Decision
+		result.Decision = resp.Decision.String()
+		result.Date = resp.Date
 		result.Confidence = 100
 	}
 
