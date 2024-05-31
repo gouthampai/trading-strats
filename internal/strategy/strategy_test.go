@@ -50,7 +50,7 @@ func TestReturnsDecision(t *testing.T) {
 	}
 
 	expectedResp := AggregateResult{
-		Decision:   Buy,
+		Decision:   Buy.String(),
 		Symbol:     symbol,
 		Confidence: 100,
 	}
