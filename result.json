@@ -1,0 +1,179 @@
+2024/05/30 23:31:07 ATVI: fewer than 201 days of results returned by alpaca
+2024/05/30 23:32:43 PEAK: fewer than 201 days of results returned by alpaca
+2024/05/30 23:32:43 CDAY: fewer than 201 days of results returned by alpaca
+[
+	{
+		"Decision": "Buy",
+		"Symbol": "PEP",
+		"Confidence": 100,
+		"Date": "2024-05-10T04:00:00Z"
+	},
+	{
+		"Decision": "Buy",
+		"Symbol": "PM",
+		"Confidence": 100,
+		"Date": "2024-05-10T04:00:00Z"
+	},
+	{
+		"Decision": "Buy",
+		"Symbol": "NEE",
+		"Confidence": 100,
+		"Date": "2024-05-02T04:00:00Z"
+	},
+	{
+		"Decision": "Buy",
+		"Symbol": "DE",
+		"Confidence": 100,
+		"Date": "2024-05-06T04:00:00Z"
+	},
+	{
+		"Decision": "Buy",
+		"Symbol": "HAL",
+		"Confidence": 100,
+		"Date": "2024-05-08T04:00:00Z"
+	},
+	{
+		"Decision": "Buy",
+		"Symbol": "NEM",
+		"Confidence": 100,
+		"Date": "2024-05-14T04:00:00Z"
+	},
+	{
+		"Decision": "Buy",
+		"Symbol": "ED",
+		"Confidence": 100,
+		"Date": "2024-05-03T04:00:00Z"
+	},
+	{
+		"Decision": "Buy",
+		"Symbol": "KDP",
+		"Confidence": 100,
+		"Date": "2024-05-21T04:00:00Z"
+	},
+	{
+		"Decision": "Buy",
+		"Symbol": "PCG",
+		"Confidence": 100,
+		"Date": "2024-05-17T04:00:00Z"
+	},
+	{
+		"Decision": "Buy",
+		"Symbol": "MKC",
+		"Confidence": 100,
+		"Date": "2024-05-02T04:00:00Z"
+	},
+	{
+		"Decision": "Buy",
+		"Symbol": "ENPH",
+		"Confidence": 100,
+		"Date": "2024-05-29T04:00:00Z"
+	},
+	{
+		"Decision": "Buy",
+		"Symbol": "VTR",
+		"Confidence": 100,
+		"Date": "2024-05-24T04:00:00Z"
+	},
+	{
+		"Decision": "Buy",
+		"Symbol": "MAA",
+		"Confidence": 100,
+		"Date": "2024-05-22T04:00:00Z"
+	},
+	{
+		"Decision": "Buy",
+		"Symbol": "EG",
+		"Confidence": 100,
+		"Date": "2024-05-13T04:00:00Z"
+	},
+	{
+		"Decision": "Buy",
+		"Symbol": "K",
+		"Confidence": 100,
+		"Date": "2024-05-07T04:00:00Z"
+	},
+	{
+		"Decision": "Buy",
+		"Symbol": "RVTY",
+		"Confidence": 100,
+		"Date": "2024-05-21T04:00:00Z"
+	},
+	{
+		"Decision": "Buy",
+		"Symbol": "AMCR",
+		"Confidence": 100,
+		"Date": "2024-05-10T04:00:00Z"
+	},
+	{
+		"Decision": "Buy",
+		"Symbol": "DGX",
+		"Confidence": 100,
+		"Date": "2024-05-09T04:00:00Z"
+	},
+	{
+		"Decision": "Buy",
+		"Symbol": "LNT",
+		"Confidence": 100,
+		"Date": "2024-05-22T04:00:00Z"
+	},
+	{
+		"Decision": "Buy",
+		"Symbol": "TECH",
+		"Confidence": 100,
+		"Date": "2024-05-14T04:00:00Z"
+	},
+	{
+		"Decision": "Buy",
+		"Symbol": "EVRG",
+		"Confidence": 100,
+		"Date": "2024-05-13T04:00:00Z"
+	},
+	{
+		"Decision": "Buy",
+		"Symbol": "AES",
+		"Confidence": 100,
+		"Date": "2024-05-10T04:00:00Z"
+	},
+	{
+		"Decision": "Buy",
+		"Symbol": "CPT",
+		"Confidence": 100,
+		"Date": "2024-05-06T04:00:00Z"
+	},
+	{
+		"Decision": "Buy",
+		"Symbol": "HRL",
+		"Confidence": 100,
+		"Date": "2024-05-06T04:00:00Z"
+	},
+	{
+		"Decision": "Buy",
+		"Symbol": "HAS",
+		"Confidence": 100,
+		"Date": "2024-05-07T04:00:00Z"
+	},
+	{
+		"Decision": "Buy",
+		"Symbol": "PNW",
+		"Confidence": 100,
+		"Date": "2024-05-15T04:00:00Z"
+	},
+	{
+		"Decision": "Buy",
+		"Symbol": "FOXA",
+		"Confidence": 100,
+		"Date": "2024-05-16T04:00:00Z"
+	},
+	{
+		"Decision": "Buy",
+		"Symbol": "SEE",
+		"Confidence": 100,
+		"Date": "2024-05-15T04:00:00Z"
+	},
+	{
+		"Decision": "Buy",
+		"Symbol": "FOX",
+		"Confidence": 100,
+		"Date": "2024-05-20T04:00:00Z"
+	}
+]

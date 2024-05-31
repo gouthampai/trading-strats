@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	"github.com/alpacahq/alpaca-trade-api-go/v3/alpaca"
 	"github.com/alpacahq/alpaca-trade-api-go/v3/marketdata"
@@ -45,12 +46,17 @@ func main() {
 	tickers := app.tickerProvider.GetTickers()
 	engine := app.RegisterStrategyServices()
 
+	buys := make([]strategy.AggregateResult, 0)
+	cutoffTime := time.Now().AddDate(0, 0, -30)
 	for _, symbol := range tickers {
 		result := engine.GetAggregateDecisions(symbol)
 
-		app.prettyPrint(result)
+		if result.Decision == "Buy" && result.Date.After(cutoffTime) {
+			buys = append(buys, result)
+		}
 	}
 
+	app.prettyPrint(buys)
 }
 
 func GenerateApplication(config config) *application {

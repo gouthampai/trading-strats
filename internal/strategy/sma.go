@@ -16,7 +16,7 @@ type GetBarsClient interface {
 type smaResult struct {
 	DayOfYear            time.Time       `json:"dayOfYear"`
 	FiftyDayAverage      decimal.Decimal `json:"FiftyDayAverage"`
-	TwoHundredDayAverage decimal.Decimal `json:"TwoHundredDayAverage`
+	TwoHundredDayAverage decimal.Decimal `json:"TwoHundredDayAverage"`
 }
 
 type SmaCrossStrategy struct {
@@ -54,6 +54,7 @@ func (strat *SmaCrossStrategy) ApplyStrategy(symbol string) <-chan StrategyResul
 
 		goldenCrossDetected := false
 		deathCrossDetected := false
+		dateCrossed := time.Now().Local().AddDate(0, 0, -90)
 
 		for i := 1; i < len(averages); i++ {
 			// todo: test golden cross and death cross detection logic
@@ -64,11 +65,13 @@ func (strat *SmaCrossStrategy) ApplyStrategy(symbol string) <-chan StrategyResul
 			if prevRecord.FiftyDayAverage.Compare(curRecord.TwoHundredDayAverage) == -1 && curRecord.FiftyDayAverage.Compare(curRecord.TwoHundredDayAverage) > -1 {
 				goldenCrossDetected = true
 				deathCrossDetected = false
+				dateCrossed = curRecord.DayOfYear
 			}
 
 			if prevRecord.FiftyDayAverage.Compare(curRecord.TwoHundredDayAverage) == 1 && curRecord.FiftyDayAverage.Compare(curRecord.TwoHundredDayAverage) < 1 {
 				goldenCrossDetected = false
 				deathCrossDetected = true
+				dateCrossed = curRecord.DayOfYear
 			}
 		}
 
@@ -76,6 +79,7 @@ func (strat *SmaCrossStrategy) ApplyStrategy(symbol string) <-chan StrategyResul
 			Success:  true,
 			Decision: Undecided,
 			Symbol:   symbol,
+			Date:     dateCrossed,
 		}
 
 		if goldenCrossDetected {
@@ -108,7 +112,7 @@ func (strat *SmaCrossStrategy) CalculateMovingAverages(symbol string) ([]smaResu
 	}
 
 	if len(resp) < 201 {
-		return nil, errors.New("fewer than 201 days of results returned by alpaca")
+		return nil, errors.New(symbol + ": fewer than 201 days of results returned by alpaca")
 	}
 
 	two_hundred_day_agg := decimal.Zero
