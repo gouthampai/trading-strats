@@ -5,7 +5,9 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"math/rand"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/alpacahq/alpaca-trade-api-go/v3/alpaca"
@@ -32,6 +34,7 @@ type application struct {
 }
 
 func main() {
+	fmt.Println("program starting at: " + time.Now().String())
 	var cfg config
 
 	flag.IntVar(&cfg.port, "port", 4000, "API server port")
@@ -48,15 +51,27 @@ func main() {
 
 	buys := make([]strategy.AggregateResult, 0)
 	cutoffTime := time.Now().AddDate(0, 0, -30)
+	// todo: refactor with a worker queue system to prevent 429 errors from alpaca.
+	var wg sync.WaitGroup
 	for _, symbol := range tickers {
-		result := engine.GetAggregateDecisions(symbol)
+		wg.Add(1)
+		go func() {
 
-		if result.Decision == "Buy" && result.Date.After(cutoffTime) {
-			buys = append(buys, result)
-		}
+			randomSeconds := rand.Int63n(100)
+			time.Sleep(time.Second * time.Duration(randomSeconds))
+			result := engine.GetAggregateDecisions(symbol)
+			fmt.Println(time.Now())
+			app.prettyPrint(result)
+			if result.Decision == "Buy" && result.Date.After(cutoffTime) {
+				buys = append(buys, result)
+			}
+			defer wg.Done()
+		}()
+
 	}
 
-	app.prettyPrint(buys)
+	wg.Wait()
+	//app.prettyPrint(buys)
 }
 
 func GenerateApplication(config config) *application {
