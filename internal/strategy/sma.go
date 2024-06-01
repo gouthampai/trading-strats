@@ -62,13 +62,13 @@ func (strat *SmaCrossStrategy) ApplyStrategy(symbol string) <-chan StrategyResul
 			curRecord := averages[i]
 
 			// golden cross detected
-			if prevRecord.FiftyDayAverage.Compare(curRecord.TwoHundredDayAverage) == -1 && curRecord.FiftyDayAverage.Compare(curRecord.TwoHundredDayAverage) > -1 {
+			if prevRecord.FiftyDayAverage.Compare(prevRecord.TwoHundredDayAverage) <= 0 && curRecord.FiftyDayAverage.Compare(curRecord.TwoHundredDayAverage) == 1 {
 				goldenCrossDetected = true
 				deathCrossDetected = false
 				dateCrossed = curRecord.DayOfYear
 			}
 
-			if prevRecord.FiftyDayAverage.Compare(curRecord.TwoHundredDayAverage) == 1 && curRecord.FiftyDayAverage.Compare(curRecord.TwoHundredDayAverage) < 1 {
+			if prevRecord.FiftyDayAverage.Compare(prevRecord.TwoHundredDayAverage) >= 0 && curRecord.FiftyDayAverage.Compare(curRecord.TwoHundredDayAverage) == -1 {
 				goldenCrossDetected = false
 				deathCrossDetected = true
 				dateCrossed = curRecord.DayOfYear
