@@ -1,7 +1,12 @@
 package strategy
 
-import "sync"
+import (
+	"sync"
+)
 
+// todo: maybe use buffered channels here? In a future state,
+// the number of strategies could be enough to cause 429 responses
+// from alpaca for a single symbol
 type TradingStrategyDecisionEngine struct {
 	Strategies []StrategyImplementation
 }

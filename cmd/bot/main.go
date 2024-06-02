@@ -5,9 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"math/rand"
 	"os"
-	"sync"
 	"time"
 
 	"github.com/alpacahq/alpaca-trade-api-go/v3/alpaca"
@@ -42,36 +40,13 @@ func main() {
 	flag.StringVar(&cfg.alpacaEndpoint, "alpaca-endpoint", os.Getenv("ALPACA_ENDPOINT"), "Alpaca Endpoint")
 	flag.StringVar(&cfg.alpacaKey, "alpaca-key", os.Getenv("ALPACA_KEY"), "Alpaca Key")
 	flag.StringVar(&cfg.alpacaSecret, "alpaca-secret", os.Getenv("ALPACA_SECRET"), "Alpaca Secret")
-	flag.StringVar(&cfg.tickersJsonFilePath, "tickers-json-file-path", "/Users/gouthampai/Documents/code/trading-strats/cmd/api/tickers.json", "Tickers json file path")
+	flag.StringVar(&cfg.tickersJsonFilePath, "tickers-json-file-path", "/Users/gouthampai/Documents/code/trading-strats/cmd/bot/tickers.json", "Tickers json file path")
 	flag.Parse()
 
 	app := GenerateApplication(cfg)
 	tickers := app.tickerProvider.GetTickers()
-	engine := app.RegisterStrategyServices()
-
-	buys := make([]strategy.AggregateResult, 0)
-	cutoffTime := time.Now().AddDate(0, 0, -30)
-	// todo: refactor with a worker queue system to prevent 429 errors from alpaca.
-	var wg sync.WaitGroup
-	for _, symbol := range tickers {
-		wg.Add(1)
-		go func() {
-
-			randomSeconds := rand.Int63n(100)
-			time.Sleep(time.Second * time.Duration(randomSeconds))
-			result := engine.GetAggregateDecisions(symbol)
-			fmt.Println(time.Now())
-			app.prettyPrint(result)
-			if result.Decision == "Buy" && result.Date.After(cutoffTime) {
-				buys = append(buys, result)
-			}
-			defer wg.Done()
-		}()
-
-	}
-
-	wg.Wait()
-	//app.prettyPrint(buys)
+	processor := app.RegisterStrategyServices()
+	processor.ProcessTickers(tickers)
 }
 
 func GenerateApplication(config config) *application {
@@ -113,7 +88,7 @@ func (app *application) prettyPrint(v any) {
 	fmt.Printf(string(output))
 }
 
-func (app *application) RegisterStrategyServices() *strategy.TradingStrategyDecisionEngine {
+func (app *application) RegisterStrategyServices() *strategy.TickerProcessor {
 	smaStrat := &strategy.SmaCrossStrategy{
 		Client: app.marketClient,
 		Logger: app.logger,
@@ -127,5 +102,9 @@ func (app *application) RegisterStrategyServices() *strategy.TradingStrategyDeci
 		Strategies: strats,
 	}
 
-	return engine
+	processor := &strategy.TickerProcessor{
+		Engine: *engine,
+	}
+
+	return processor
 }
